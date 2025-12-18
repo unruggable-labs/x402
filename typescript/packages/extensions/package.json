@@ -68,6 +68,16 @@
         "default": "./dist/cjs/bazaar/index.js"
       }
     },
+    "./ens": {
+      "import": {
+        "types": "./dist/esm/ens/index.d.mts",
+        "default": "./dist/esm/ens/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/ens/index.d.ts",
+        "default": "./dist/cjs/ens/index.js"
+      }
+    },
     "./sign-in-with-x": {
       "import": {
         "types": "./dist/esm/sign-in-with-x/index.d.mts",
