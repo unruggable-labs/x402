@@ -116,13 +116,11 @@ Clients MUST echo `info.payee` exactly as received and MAY append their own `inf
 
 ## Authorizing and verifying ENS identities
 
-The extension does not assert ownership. Applications that need to authorize a specific ENS identity SHOULD verify the name independently. Verification may be performed using:
-
-- [ENSIP-19](https://docs.ens.domains/ensip/19/) primary-name workflow: resolve the `payTo` address via reverse lookup, confirm the returned primary name matches the advertised `info.payee.ens`, and resolve that name forward to ensure it maps back to the same address. Only treat an ENS entry as authoritative once independent checks succeed.
+The extension does not assert ownership. Applications that require authorization of a specific ENS identity SHOULD perform independent verification. ENS identities associated with both payee and payer addresses MAY be verified using the [ENSIP-19](https://docs.ens.domains/ensip/19/) primary-name workflow. An ENS entry SHOULD be treated as authoritative only after such independent verification succeeds.
 
 ## Runtime helpers
 
-The `declareEnsExtension` helper defined in `core.ts` constructs an extension object from an `EnsInfo` payload and validates it against the bundled JSON Schema. It returns `{ valid, errors, extension }`, allowing transmission to be conditioned on successful validation.. This entry point accepts both payee and payer metadata. Payee metadata is supplied in `PaymentRequired`. Payer metadata may be appended in `PaymentPayload`.
+The `declareEnsExtension` helper defined in `core.ts` constructs an extension object from an `EnsInfo` payload and validates it against the bundled JSON Schema. It returns `{ valid, errors, extension }`, allowing transmission to be conditioned on successful validation. This entry point accepts both payee and payer metadata. Payee metadata is supplied in `PaymentRequired`. Payer metadata may be appended in `PaymentPayload`.
 
 ### Example
 

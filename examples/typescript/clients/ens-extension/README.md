@@ -1,6 +1,6 @@
 # ENS Identity Extension Example
 
-This example demonstrates how to construct and utilize the x402 `ens` extension using the shared `@x402/extensions` package. A local resource server acts as the merchant (advertising its ENS identity in `PaymentRequired`) and the client acts as the payer (echoing that ENS data and adding its own identity before sending a `PaymentPayload`). 
+This example demonstrates how to construct and utilize the x402 `ens` extension using the shared `@x402/extensions` package. A local resource server acts as the merchant (payee) by advertising its ENS identity in `PaymentRequired`, and the client acts as the payer (echoing that ENS data and adding its own identity before sending a `PaymentPayload`). 
 
 Settlement semantics remain unchanged; the example focuses on how ENS identity metadata propagates through the protocol. Consistent with the extension rules, the client echoes the server-provided payee fields verbatim and only appends payer metadata.
 
@@ -43,4 +43,4 @@ To target an external resource server instead of the bundled instance, set `RESO
 
 ## Verifying ENS identities
 
-The example demonstrates data exchange only; client implementations MAY perform verification. Verification can be performed using the [ENSIP-19](https://docs.ens.domains/ensip/19/) primary-name workflow by resolving the `payTo` address via reverse lookup, confirming that the returned primary name matches the advertised `info.payee.ens`, and then resolving that name forward to ensure it maps back to the same address.
+The example demonstrates data exchange only; client implementations MAY perform verification. ENS identities for both merchant and payer addresses can be verified using the [ENSIP-19](https://docs.ens.domains/ensip/19/) primary-name workflow. Only treat an ENS entry as authoritative once independent checks succeed.
