@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { base } from "viem/chains";
 import { createSignerSepolia, SignerWallet } from "../../../types/shared/evm";
 import { PaymentRequirements, UnsignedPaymentPayload } from "../../../types/verify";
-import { createPaymentHeader, preparePaymentHeader, signPaymentHeader } from "./client";
+import {
+  createPaymentHeader,
+  normalizePayTo,
+  preparePaymentHeader,
+  signPaymentHeader,
+} from "./client";
 import { signAuthorization } from "./sign";
 import { encodePayment } from "./utils/paymentUtils";
+import { EvmNetworkToChainId } from "../../../types/shared/network";
 
 vi.mock("./sign", async () => {
   const actual = await vi.importActual("./sign");
@@ -16,6 +23,16 @@ vi.mock("./sign", async () => {
 vi.mock("./utils/paymentUtils", () => ({
   encodePayment: vi.fn().mockReturnValue("encoded-payment-header"),
 }));
+
+const makeSignerStub = (
+  chainId: number,
+  getEnsAddress: SignerWallet["getEnsAddress"],
+): SignerWallet =>
+  ({
+    chain: { id: chainId },
+    transport: {},
+    getEnsAddress,
+  }) as unknown as SignerWallet;
 
 describe("preparePaymentHeader", () => {
   const mockPaymentRequirements: PaymentRequirements = {
@@ -280,6 +297,47 @@ describe("createPaymentHeader", () => {
 
     await expect(createPaymentHeader(client, 1, mockPaymentRequirements)).rejects.toThrow(
       "Encoding failed",
+    );
+  });
+});
+
+describe("normalizePayTo", () => {
+  const vitalikEnsName = "vitalik.eth";
+  const vitalikEnsAddress = "0x000000000000000000000000000000000000dEaD";
+
+  const paymentRequirements: PaymentRequirements = {
+    scheme: "exact",
+    network: "base",
+    payTo: vitalikEnsName,
+    asset: "0x0000000000000000000000000000000000000001",
+    maxAmountRequired: "1000",
+    resource: "https://example.com/paywalled",
+    description: "Test payment",
+    mimeType: "application/json",
+    maxTimeoutSeconds: 60,
+  };
+
+  it("resolves ENS names to addresses", async () => {
+    const getEnsAddress = vi.fn().mockResolvedValue(vitalikEnsAddress);
+    const client = makeSignerStub(base.id, getEnsAddress);
+    const expectedCoinType =
+      BigInt(0x80000000) | BigInt(EvmNetworkToChainId.get("base") ?? base.id);
+
+    const normalized = await normalizePayTo(paymentRequirements, client);
+
+    expect(getEnsAddress).toHaveBeenCalledWith({
+      name: vitalikEnsName,
+      coinType: expectedCoinType,
+    });
+    expect(normalized.payTo).toBe(vitalikEnsAddress);
+  });
+
+  it("throws when ENS resolution fails", async () => {
+    const getEnsAddress = vi.fn().mockResolvedValue(null);
+    const client = makeSignerStub(base.id, getEnsAddress);
+
+    await expect(normalizePayTo(paymentRequirements, client)).rejects.toThrow(
+      `Could not resolve ENS name "${vitalikEnsName}" for network "${paymentRequirements.network}"`,
     );
   });
 });

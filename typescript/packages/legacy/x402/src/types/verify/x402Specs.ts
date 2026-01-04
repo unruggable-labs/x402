@@ -2,6 +2,7 @@ import { z } from "zod";
 import { NetworkSchema } from "../shared";
 import { SvmAddressRegex } from "../shared/svm";
 import { Base64EncodedRegex } from "../../shared/base64";
+import { isEnsName } from "../shared/ens";
 
 // Constants
 const EvmMaxAtomicUnits = 18;
@@ -63,6 +64,7 @@ const hasMaxLength = (maxLength: number) => (value: string) => value.length <= m
 
 // x402PaymentRequirements
 const EvmOrSvmAddress = z.string().regex(EvmAddressRegex).or(z.string().regex(SvmAddressRegex));
+const EvmOrEnsOrSvmAddress = EvmOrSvmAddress.or(z.string().refine(isEnsName));
 const mixedAddressOrSvmAddress = z
   .string()
   .regex(MixedAddressRegex)
@@ -75,7 +77,7 @@ export const PaymentRequirementsSchema = z.object({
   description: z.string(),
   mimeType: z.string(),
   outputSchema: z.record(z.any()).optional(),
-  payTo: EvmOrSvmAddress,
+  payTo: EvmOrEnsOrSvmAddress,
   maxTimeoutSeconds: z.number().int(),
   asset: mixedAddressOrSvmAddress,
   extra: z.record(z.any()).optional(),

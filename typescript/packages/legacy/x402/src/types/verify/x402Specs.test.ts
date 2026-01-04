@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { isEnsName } from "../shared/ens";
 
 describe("x402Specs Regex Patterns", () => {
   // Import the regex patterns from the source file
@@ -36,6 +37,8 @@ describe("x402Specs Regex Patterns", () => {
         "0X1234567890123456789012345678901234567890", // Wrong case prefix
         "0x123456789012345678901234567890123456789", // 39 chars (too short)
         "0x12345678901234567890123456789012345678901", // 41 chars (too long)
+        "example.eth", // ENS should not match raw EVM regex
+        "sub.domain.eth", // ENS should not match raw EVM regex
       ];
 
       invalidAddresses.forEach(address => {
@@ -171,6 +174,43 @@ describe("x402Specs Regex Patterns", () => {
 
       validSignatures.forEach(signature => {
         expect(Evm6492SignatureRegex.test(signature)).toBe(true);
+      });
+    });
+  });
+
+  describe("ENS name validation (ENSIP-15)", () => {
+    it("should match valid ENS names", () => {
+      const validNames = [
+        "example.eth",
+        "foo-bar.eth",
+        "sub.domain.eth",
+        "bücher.eth",
+        "a.eth",
+        "my-label-1.my-dapp.eth",
+        "12345.eth", // allowed though not recommended
+        "💩.eth",
+      ];
+
+      validNames.forEach(name => {
+        if (!isEnsName(name)) {
+          throw new Error(`Valid ENS name failed normalization: ${name}`);
+        }
+      });
+    });
+
+    it("should reject invalid ENS names", () => {
+      const invalidNames = [
+        "example..eth", // empty label
+        ".example.eth", // leading dot
+        "example.eth.", // trailing dot
+        "ex*mple.eth", // invalid character
+        "example eth", // spaces not allowed
+        "example/.eth", // slash not allowed
+        "", // empty string
+      ];
+
+      invalidNames.forEach(name => {
+        expect(isEnsName(name)).toBe(false);
       });
     });
   });

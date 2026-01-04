@@ -70,3 +70,9 @@ export const ChainIdToNetwork = Object.fromEntries(
     network,
   ]),
 ) as Record<number, Network>;
+
+// SLIP-44 coin types for supported non-EVM networks.
+export const NonEvmCoinTypes: Partial<Record<Network, bigint>> = {
+  solana: BigInt(501),
+  "solana-devnet": BigInt(501),
+};
